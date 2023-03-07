@@ -1,0 +1,47 @@
+IT DEPARTMENT - NIGHTTIME SECURITY DIVISION
+
++-------------- MANAGERS ---------------
+|
+| Stacy Rodriguez
+| Employee ID: 329328
+| Email Address: srodriguez@gmail.com
+| Office Number: 45
+| 
+| Alex Brunelle
+| Employee ID: 902678
+| Email Address: abrunelle@gmail.com
+| Office Number: 46
++---------------------------------------
+
++-------------- ENGINEERS --------------
+|
+| Percy Ibanez
+| Employee ID: 766584
+| Email Address: pibanez@gmail.com
+| GitHub Username: Pulsar
+|
+| June Gunders
+| Employee ID: 339560
+| Email Address: jgunders@gmail.com
+| GitHub Username: Junebug
+| 
+| Hector Nelson
+| Employee ID: 527394
+| Email Address: hnelson@gmail.com
+| GitHub Username: Melty
+|
++---------------------------------------
+
++-------------- INTERNS --------------
+|
+| Hailey Alberts
+| Employee ID: 954433
+| Email Address: halberts@gmail.com
+| School: The University of Utah
+| 
+| Jonathan Zinger
+| Employee ID: 384765
+| Email Address: jzinger@gmail.com
+| School: The University of Utah
+|
++---------------------------------------
