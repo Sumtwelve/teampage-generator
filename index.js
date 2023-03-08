@@ -3,6 +3,8 @@ const fs = require("fs");
 
 const employee = require("./lib/Employee");
 const manager = require("./lib/Manager");
+const engineer = require("./lib/Engineer");
+const intern = require("./lib/Intern");
 
 // Create a `team` object in the global scope.
 // This will allow us to save inquirer's `answers` data externally
