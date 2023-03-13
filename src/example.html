@@ -1,17 +1,15 @@
-function generateHTML(team) {
-    return `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="./style.css">
-    <title>${team.teamName}</title>
+    <link rel="stylesheet" type="text/css" href="./example.css">
+    <title>Pou</title>
 </head>
 <body>
-    <h1>${team.teamName}</h1>
+    <h1>Pou</h1>
     <section class="cards-section">
-        ${generateCards(team)}
         <article class="card manager">
             <div class="card-header">
                 <h3>Stacy Rodriguez</h3>
@@ -53,13 +51,4 @@ function generateHTML(team) {
         </article>
     </section>
 </body>
-</html>`;
-
-}
-
-
-function generateCards(team) {
-    
-}
-
-module.exports = generateHTML;
+</html>

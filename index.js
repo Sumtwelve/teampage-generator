@@ -1,43 +1,23 @@
 const inquirer = require("inquirer");
 const fs = require("fs");
 
-const employee = require("./lib/Employee");
-const manager = require("./lib/Manager");
-const engineer = require("./lib/Engineer");
-const intern = require("./lib/Intern");
+const Employee = require("./lib/employee");
+const Manager = require("./lib/Manager");
+const Engineer = require("./lib/Engineer");
+const Intern = require("./lib/Intern");
+
+const generateHTML = require("./src/generateHTML");
+const generateCSS = require("./src/generateCSS");
 
 // Create a `team` object in the global scope.
-// This will allow us to save inquirer's `answers` data externally
-// and then reuse the inquirer with new prompts without having to worry about losing any data.
-// FIELDS:
-// dataNeeded (array): When adding a member of this role, the program will ask for the info in this field.
-// list (array): A list of all team members (each stored as objects) with this role.
+// Most of the Inquirer stuff is recursive, so data will be saved here between runs so the recursion
+// doesn't override the team data.
 let team = {
     teamName: "",
-    manager: {
-        dataNeeded: "Office Number",
-        list: []
-    },
-    engineer: {
-        dataNeeded: "GitHub Username",
-        list: []
-    },
-    intern: {
-        dataNeeded: "School",
-        list: []
-    }
+    managers: [],
+    engineers: [],
+    interns: []
 };
-
-// ------ TEAM MEMBER DATA FORMAT EXAMPLE ------ //
-// list: [
-//     {
-//         role: "Manager",
-//         name: "Lisa Schoener",
-//         employeeID: "4423",
-//         email: "lschoener@gmail.com",
-//         officeNumber: "28"
-//     }
-// ]
 
 
 // Welcome the user to the app and do some explaining.
@@ -81,16 +61,15 @@ inquirer
         // Create a new manager object to insert into the team object.
         // This method allows us to call the inquirer multiple times
         // without having to worry about losing any answers data.
-        let mgr = {
-            role: "Manager",
-            name: answers.mgrName,
-            employeeID: answers.mgrID,
-            email: answers.mgrEmail,
-            officeNumber: answers.mgrOfficeNum
-        };
+        let mgr = new Manager(
+            answers.mgrName, 
+            answers.mgrID,
+            answers.mgrEmail,
+            answers.mgrOfficeNum
+        );
 
         // Push new manager object to the `manager.list` array of the `team` object.
-        team.manager.list.push(mgr);
+        team.managers.push(mgr);
         console.log("DEBUG: Successfully pushed first manager to managers list!");
 
         mainMenu();
@@ -193,11 +172,10 @@ function addMemberToTeam(team) {
             // I know this next one looks a bit convoluted, but let me explain.
             // Each role has a unique piece of info it needs. Managers -> Office Number; Engineers -> GitHub Username; Interns -> School
             // Rather than write a switch statement AFTER the prompts and then call a whole new inquirer to prompt the user for this unique info,
-            // I'd rather just use the selected role (answers.newMemberRole) to find and display the `dataNeeded` field,
-            // which I created exactly for this purpose.
+            // I wrote a method in the Employee class that will return the unique data field as a string, given the role.
             {
                 type: "input",
-                message: (answers) => `${team[answers.newMemberRole.toLowerCase()].dataNeeded}:`,
+                message: (answers) => `${getRoleSpecificDataField(answers.newMemberRole)}:`,
                 name: "newMemberRoleSpecificInfo"
             },
             {
@@ -209,40 +187,60 @@ function addMemberToTeam(team) {
         ])
         .then((answers) => {
 
-            let uniqueMemberInfo = team[answers.newMemberRole.toLowerCase()].dataNeeded;
+            // let newMember = {
+            //     role: answers.newMemberRole,
+            //     name: answers.newMemberName,
+            //     employeeID: answers.newMemberID,
+            //     email: answers.newMemberEmail
+            // };
 
-            let newMember = {
-                role: answers.newMemberRole,
-                name: answers.newMemberName,
-                employeeID: answers.newMemberID,
-                email: answers.newMemberEmail
-            };
+            let newMember;
 
-            // I was trying to avoid writing a switch statement... but here I think it's okay.
-            // The newMember object needs to have a certain element at the end, and the name of that element
-            // will depend on the role of the new member.
-            // The following is the only way I can think of to do that dynamically.
-            switch (uniqueMemberInfo) {
-                case "Office Number":
-                    newMember["officeNumber"] = answers.newMemberRoleSpecificInfo;
+            // I was trying to avoid writing a switch statement... guess it could be worse.
+            // FIXME: This code is repetitive. How can I make the program decide which class to instantiate
+            // depending on the contents of a string?
+            switch (answers.newMemberRole) {
+                case "Manager":
+                    newMember = new Manager(
+                        answers.newMemberName,
+                        answers.newMemberID,
+                        answers.newMemberEmail,
+                        answers.newMemberRoleSpecificInfo
+                    );
                     break;
-                
-                case "GitHub Username":
-                    newMember["githubUsername"] = answers.newMemberRoleSpecificInfo;
+
+                case "Engineer":
+                    newMember = new Engineer(
+                        answers.newMemberName,
+                        answers.newMemberID,
+                        answers.newMemberEmail,
+                        answers.newMemberRoleSpecificInfo
+                    );
                     break;
 
-                case "School":
-                    newMember["school"] = answers.newMemberRoleSpecificInfo;
+                case "Intern":
+                    newMember = new Intern(
+                        answers.newMemberName,
+                        answers.newMemberID,
+                        answers.newMemberEmail,
+                        answers.newMemberRoleSpecificInfo
+                    );
                     break;
 
                 default:
-                    console.error(`addMemberToTeam() :: Error when adding new member: Unexpected value "${uniqueMemberInfo}" for uniqueMemberInfo in switch statement.\nReturning to main menu.`);
+                    console.error(`addMemberToTeam() :: Error when adding new member: Unexpected role "${answers.newMemberRole}" in switch statement.\nReturning to main menu.`);
                     mainMenu();
                     break;
             }
 
+            // debug stuff
+            //console.log("get printable info function for new member:\n" + newMember.getPrintableInfo());
+
             // PUSH TO TEAM OBJECT!!
-            team[answers.newMemberRole.toLowerCase()].list.push(newMember);
+            // This selects an array within the team object.
+            // The name of the array is a key in the team object, so that's how this method selects it by passing in a string.
+            // Note that I had to add an 's' manually (⤵) to actually match the name of that array.
+            team[`${answers.newMemberRole.toLowerCase()}s`].push(newMember);
 
             // RECURSION!!
             if (answers.addAnotherTeamMemberYesNo === "Yes, add another") {
@@ -260,26 +258,13 @@ function addMemberToTeam(team) {
         });
 }
 
-// TODO: Implement this feature later.
+// TODO: Implement the "Edit Team" feature later.
 // function editTeam(team) {
 //     console.log("Here is your team so far:")
 // }
 
 
 function generateWebpage(team) {
-
-    let mgrPlural = "";
-    if (team.manager.list.length > 1)
-        mgrPlural = "S";
-
-    let engPlural = "";
-    if (team.engineer.list.length > 1)
-        engPlural = "S";
-
-    let internPlural = "";
-    if (team.intern.list.length > 1)
-        internPlural = "S";
-
 
     console.log("Here's your team so far:");
 
@@ -296,7 +281,13 @@ function generateWebpage(team) {
         ])
         .then((answers) => {
             if (answers.generateNowYesNo === "Yes, generate webpage now") {
-                // TODO: Run the two fs.writeFile functions which each call to the scripts in the utils/ folder
+                // first is the HTML!
+                fs.writeFile(
+                    `./dist/${team.teamName}/index.html`,
+                    // TODO: finish this once you've written the HTML generator
+                )
+            } else {
+                mainMenu();
             }
         })
 }
@@ -308,11 +299,50 @@ function printTeam(team) {
     // Print the team name in all caps OUTSIDE of the for loop
     console.log(team.teamName.toUpperCase());
 
-    let teamObjLength = Object.keys(team);
+    // TODO: implement a team member counting feature into the main `for` loop
+    let teamMemberCount = 0;
 
-    for (let i = 1; i < teamObjLength; i++) {
-        for (let j = 0; j < team[Object.keys(team)[i]].list.length; j++) {
-            
-        }
+    // My first ever triple-nested for loop. This only happened because of the way the `team` object is structured,
+    // since I have to reach in three levels to get to the actual member data. There's probably a more efficient way to do this.
+    for (let memberListName in team) {
+        // Loop will grab `teamName` element of `team`. To prevent this, only proceed if an array was grabbed.
+        if (typeof team[memberListName] === "object") {
+            console.log(`+-------------- ${memberListName.toUpperCase()} ---------------\n|`);
+            for (let member of team[memberListName]) {
+                
+                for (let data of Object.values(member)) {
+                    console.log(`|  ${data}`);
+                }
+                console.log("|");
+                
+            }
+        } else continue; // this happens when team.teamName is grabbed
     }
+
+    console.log("+---------------------------------------");
+    //console.log(`Total Team Members: ${teamMemberCount}`);
+}
+
+
+// Function to get the name of the data field specific to a role
+function getRoleSpecificDataField(role) {
+    switch (role) {
+        case "Manager":
+            return "Office Number";
+        
+        case "Engineer":
+            return "GitHub Username";
+
+        case "Intern":
+            return "School";
+
+        default:
+            return "ERROR";
+    }
+}
+
+
+// Function to capitalize the first letter of a string
+function toNameCase(str) {
+    return `${str.substring(0,1).toUpperCase()}${str.substring(1)}`;
 }
