@@ -56,21 +56,22 @@ inquirer
     ])
     .then((answers) => {
         // Set the Team Name into the `team` object
-        team.teamName = answers.teamName;
+        team.teamName = toNameCase(answers.teamName);
 
         // Create a new manager object to insert into the team object.
         // This method allows us to call the inquirer multiple times
         // without having to worry about losing any answers data.
         let mgr = new Manager(
-            answers.mgrName, 
+            toNameCase(answers.mgrName), 
             answers.mgrID,
-            answers.mgrEmail,
+            answers.mgrEmail.toLowerCase(),
             answers.mgrOfficeNum
         );
 
         // Push new manager object to the `manager.list` array of the `team` object.
         team.managers.push(mgr);
-        console.log("DEBUG: Successfully pushed first manager to managers list!");
+        //console.log("DEBUG: Successfully pushed first manager to managers list!");
+        console.log("\nTeam name and first manager added successfully.")
 
         mainMenu();
     })
@@ -83,7 +84,7 @@ inquirer
 // Calling inquirer inside a function like this allows recursion,
 // which in turn allows teams of infinite size to be made.
 function mainMenu() {
-    console.log("\nMAIN MENU");
+    console.log("\n=====================\n----  MAIN MENU  ----\n=====================\n");
     inquirer
         .prompt([
             {
@@ -181,7 +182,7 @@ function addMemberToTeam(team) {
             {
                 type: "list",
                 message: "Add another team member?",
-                choices: ["No, go back to main menu", "Yes, add another"],
+                choices: ["Yes, add another", "No, go back to main menu"],
                 name: "addAnotherTeamMemberYesNo"
             }
         ])
@@ -202,28 +203,28 @@ function addMemberToTeam(team) {
             switch (answers.newMemberRole) {
                 case "Manager":
                     newMember = new Manager(
-                        answers.newMemberName,
+                        toNameCase(answers.newMemberName),
                         answers.newMemberID,
-                        answers.newMemberEmail,
-                        answers.newMemberRoleSpecificInfo
+                        answers.newMemberEmail.toLowerCase(),
+                        toNameCase(answers.newMemberRoleSpecificInfo)
                     );
                     break;
 
                 case "Engineer":
                     newMember = new Engineer(
-                        answers.newMemberName,
+                        toNameCase(answers.newMemberName),
                         answers.newMemberID,
-                        answers.newMemberEmail,
-                        answers.newMemberRoleSpecificInfo
+                        answers.newMemberEmail.toLowerCase(),
+                        toNameCase(answers.newMemberRoleSpecificInfo)
                     );
                     break;
 
                 case "Intern":
                     newMember = new Intern(
-                        answers.newMemberName,
+                        toNameCase(answers.newMemberName),
                         answers.newMemberID,
-                        answers.newMemberEmail,
-                        answers.newMemberRoleSpecificInfo
+                        answers.newMemberEmail.toLowerCase(),
+                        toNameCase(answers.newMemberRoleSpecificInfo)
                     );
                     break;
 
@@ -281,28 +282,58 @@ function generateWebpage(team) {
         ])
         .then((answers) => {
             if (answers.generateNowYesNo === "Yes, generate webpage now") {
+
+                // Make dist/ folder if it somehow doesn't exist (maybe it got deleted)
+                if (!fs.existsSync("./dist/")) {
+                    fs.mkdirSync("./dist/");
+                }
+
+                // Generated files will be in `dist/[teamName]/`. We can't have duplicate folder names or else files will get overwritten.
+                // To solve this, I count the number of files in dist/ and filter it down to the ones that start with the team name.
+                // if you're reading this send me an email that says "i am your biggest fan i read the entire source code ♥ A+"
+                let folderName = team.teamName; // by default folder name will just be team name
+                let distFiles = fs.readdirSync(`./dist/`, (err) => {if (err) console.error(err)});
+                let numDupeFolders = 0;
+                for (fileName of distFiles) {
+                    if (fileName.startsWith(team.teamName)) {
+                        numDupeFolders++;
+                        folderName = `${team.teamName}_${numDupeFolders + 1}`;
+                    }
+                }
+
+                // If the above code works, we won't ever need to check if this directory already exists. We can just create it right now!!!!
+                fs.mkdirSync(`./dist/${folderName}/`);
+                
+                // NOW WE'RE READY TO WRITE THE HTML AND CSS FILES!!
                 // first is the HTML!
                 fs.writeFile(
-                    `./dist/${team.teamName}/index.html`,
-                    // TODO: finish this once you've written the HTML generator
-                )
+                    `./dist/${folderName}/index.html`,
+                    generateHTML(team),
+                    ((err) => err ? console.error(err) : console.log(`File ./dist/${folderName}/index.html successfully written!`))
+                );
+
+                // next is the CSS!
+                fs.writeFile(
+                    `./dist/${folderName}/style.css`,
+                    generateCSS(),
+                    ((err) => err ? console.error(err) : console.log(`File ./dist/${folderName}/style.css successfully written!`))
+                );
+
             } else {
                 mainMenu();
             }
-        })
+        });
 }
 
 
-// A function to print to the console a neatly formatted overview of the user's team
+// A function to print to the console a neatly formatted overview of the user's team.
+// This function will be called when the user is ready to 
 function printTeam(team) {
 
     // Print the team name in all caps OUTSIDE of the for loop
-    console.log(team.teamName.toUpperCase());
+    console.log(team.teamName);
 
-    // TODO: implement a team member counting feature into the main `for` loop
-    let teamMemberCount = 0;
-
-    // My first ever triple-nested for loop. This only happened because of the way the `team` object is structured,
+    // My first ever triple-nested for loop. A little ugly. This only happened because of the way the `team` object is structured,
     // since I have to reach in three levels to get to the actual member data. There's probably a more efficient way to do this.
     for (let memberListName in team) {
         // Loop will grab `teamName` element of `team`. To prevent this, only proceed if an array was grabbed.
@@ -324,7 +355,8 @@ function printTeam(team) {
 }
 
 
-// Function to get the name of the data field specific to a role
+// Function to get the name of the data field specific to a role.
+// I hate that I had to write this.
 function getRoleSpecificDataField(role) {
     switch (role) {
         case "Manager":
@@ -337,12 +369,20 @@ function getRoleSpecificDataField(role) {
             return "School";
 
         default:
-            return "ERROR";
+            console.error("ERROR: Bad value detected for `role` variable inside index.js/getRoleSpecificDataField().\nIf prompted for input, enter the appropriate data for this member's role:\nManager: Office number\nEngineer: GitHub Username\nIntern: School Name.\nI apologize for this error.");
     }
 }
 
 
-// Function to capitalize the first letter of a string
+// Function to capitalize all first letters of words in a sentence.
 function toNameCase(str) {
-    return `${str.substring(0,1).toUpperCase()}${str.substring(1)}`;
+    return str.trim()
+    .split(" ")
+    .map(word => word[0].toUpperCase() + word.substring(1))
+    .join(" ");
 }
+
+
+
+// This message displays anytime the CLI terminates. Probably only when user selects "Exit without saving" from the main menu.
+console.log("\nThanks for using the Teampage Generator. Goodbye!");
