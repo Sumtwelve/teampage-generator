@@ -69,7 +69,7 @@ function generateCards(team) {
 // The only purpose of this function is to make a clickable link for an Engineer's GitHub profile
 function displayRoleSpecificData(member) {
     if (member.getRole() === "Engineer") {
-        return `<a href="https://github.com/${member.getRoleSpecificData()}">${member.getRoleSpecificData()}</a>`;
+        return `<a target="_blank" href="https://github.com/${member.getRoleSpecificData()}">${member.getRoleSpecificData()}</a>`;
     } else {
         return member.getRoleSpecificData();
     }

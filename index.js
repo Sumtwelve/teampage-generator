@@ -133,7 +133,7 @@ function mainMenu() {
                     } else {
                         // This lets the script run out without generating any files,
                         // therefore exiting without saving.
-                        console.log("Teampage generator cancelled. Goodbye!");
+                        console.log("Teampage Generator run terminated. Goodbye!");
                     }
                     break;
 
@@ -381,8 +381,3 @@ function toNameCase(str) {
     .map(word => word[0].toUpperCase() + word.substring(1))
     .join(" ");
 }
-
-
-
-// This message displays anytime the CLI terminates. Probably only when user selects "Exit without saving" from the main menu.
-console.log("\nThanks for using the Teampage Generator. Goodbye!");
