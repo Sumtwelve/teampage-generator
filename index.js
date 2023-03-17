@@ -336,8 +336,8 @@ function printTeam(team) {
     // My first ever triple-nested for loop. A little ugly. This only happened because of the way the `team` object is structured,
     // since I have to reach in three levels to get to the actual member data. There's probably a more efficient way to do this.
     for (let memberListName in team) {
-        // Loop will grab `teamName` element of `team`. To prevent this, only proceed if an array was grabbed.
-        if (typeof team[memberListName] === "object") {
+        // Loop will want to grab `teamName` (string) element of `team`. To prevent this, only proceed if element grabbed is NOT a string.
+        if (!typeof team[memberListName] === "string") {
             console.log(`+-------------- ${memberListName.toUpperCase()} ---------------\n|`);
             for (let member of team[memberListName]) {
                 
@@ -347,7 +347,7 @@ function printTeam(team) {
                 console.log("|");
                 
             }
-        } else continue; // this happens when team.teamName is grabbed
+        } else continue; // this should happen only once, when team.teamName is grabbed
     }
 
     console.log("+---------------------------------------");

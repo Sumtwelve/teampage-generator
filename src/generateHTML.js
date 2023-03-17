@@ -60,6 +60,9 @@ function generateCards(team) {
     }
 
     // Trimmed to eliminate awkward spacing introduced by the newline on line 56-57.
+    // I can't just get rid of the newline because the cards need to be separated by it.
+    // Trimming is the solution because it will only get rid of the newline on the *final* card,
+    // and the HTML file will not look wonky.
     return cardsHTML.trim();
 
 }

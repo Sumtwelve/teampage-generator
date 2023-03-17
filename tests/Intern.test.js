@@ -36,7 +36,7 @@ describe('Intern', () => {
 
     describe('getRole', () => {
         it('should return the string \"Intern\"', () => {
-            const intern = new Intern("John", "4", "john@gmail.com", "BYU");
+            const intern = new Intern();
             expect(intern.getRole()).toEqual("Intern");
         });
     });
