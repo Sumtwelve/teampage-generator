@@ -307,9 +307,9 @@ function generateWebpage(team) {
                 // NOW WE'RE READY TO WRITE THE HTML AND CSS FILES!!
                 // first is the HTML!
                 fs.writeFile(
-                    `./dist/${folderName}/index.html`,
-                    generateHTML(team),
-                    ((err) => err ? console.error(err) : console.log(`File ./dist/${folderName}/index.html successfully written!`))
+                    `./dist/${folderName}/index.html`, // path of new file
+                    generateHTML(team), // content to write to file
+                    ((err) => err ? console.error(err) : console.log(`File ./dist/${folderName}/index.html successfully written!`)) // callback function
                 );
 
                 // next is the CSS!
@@ -330,21 +330,21 @@ function generateWebpage(team) {
 // This function will be called when the user is ready to 
 function printTeam(team) {
 
-    // Print the team name in all caps OUTSIDE of the for loop
+    // Print the team name as a header
     console.log(team.teamName);
 
-    // My first ever triple-nested for loop. A little ugly. This only happened because of the way the `team` object is structured,
+    // I know this is ugly. It only happened because of the way the `team` object is structured,
     // since I have to reach in three levels to get to the actual member data. There's probably a more efficient way to do this.
     for (let memberListName in team) {
         // Loop will want to grab `teamName` (string) element of `team`. To prevent this, only proceed if element grabbed is NOT a string.
-        if (!typeof team[memberListName] === "string") {
+        if (typeof team[memberListName] !== "string") {
             console.log(`+-------------- ${memberListName.toUpperCase()} ---------------\n|`);
             for (let member of team[memberListName]) {
                 
-                for (let data of Object.values(member)) {
+                for (let data of Object.values(member)) { // must invoke Object.values to iterate over the data with this kind of for loop
                     console.log(`|  ${data}`);
                 }
-                console.log("|");
+                console.log("|"); // provides a 'left border' look on lines without data
                 
             }
         } else continue; // this should happen only once, when team.teamName is grabbed
@@ -376,8 +376,8 @@ function getRoleSpecificDataField(role) {
 
 // Function to capitalize all first letters of words in a sentence.
 function toNameCase(str) {
-    return str.trim()
-    .split(" ")
-    .map(word => word[0].toUpperCase() + word.substring(1))
-    .join(" ");
+    return str.trim() // no reason, I just like trimming strings
+    .split(" ") // get the individual words as an array
+    .map(word => word[0].toUpperCase() + word.substring(1)) // capitalize first letter then concat the rest of the word
+    .join(" "); // convert array back to string
 }
